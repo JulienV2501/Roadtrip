@@ -193,9 +193,6 @@
   </style>
 </head>
 <body>
-<script src="auth.js"></script>
-<script>requireAuth();</script>
-
 <header>
   <div>
     <h1>🗺️ Hub des Voyages</h1>
@@ -234,7 +231,8 @@
 
 <script>
 (function(){
-  const API_BASE = "http://localhost:3000/api";
+  const API_BASE = ""; // localhost static
+
 
   const storeKey='tripHub.v4'; // nouveau stockage
   const $ = (q)=>document.querySelector(q);
@@ -252,9 +250,9 @@
   }
 
   function buildSuggestedPath(year, name){
-    const y = String(year || '').trim() || String(new Date().getFullYear());
-    const slug = slugifyName(name || 'voyage');
-    return `${y}/${slug}.html`;
+    const y = String(year || "");
+    const slug = slugifyName(name || "voyage");
+    return `trip.html?year=${encodeURIComponent(y)}&slug=${encodeURIComponent(slug)}`;
   }
 
   const PLACE_COORDS = {
@@ -288,17 +286,10 @@
   }
 
   async function createTripFileOnServer(year, name){
-    const slug = slugifyName(name);
-    const res = await fetch(`${API_BASE}/trips/create`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({year, name, slug})
-    });
-    if(!res.ok){
-      const txt = await res.text();
-      throw new Error(txt || `Erreur HTTP ${res.status}`);
-    }
-    return res.json();
+    // Mode localhost (python http.server) : pas de backend.
+    const y = String(year || "");
+    const slug = slugifyName(name || "voyage");
+    return { ok: true, relPath: `trip.html?year=${encodeURIComponent(y)}&slug=${encodeURIComponent(slug)}` };
   }
 
   function load(){

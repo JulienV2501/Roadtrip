@@ -1,16 +1,8 @@
-# Roadtrip (statique) + Supabase
+# Roadtrip – Localhost
 
-## Structure
-- `public/index.html` : Hub (connexion + liste des trips)
-- `public/trip.html` : Page d'un trip (récap + jours + fichiers)
-- `public/config.js` : URL + anon key Supabase + bucket
-- `supabase.sql` : SQL à coller dans Supabase (table + RLS)
+## Lancer le site
+python -m http.server 8000
 
-## Lancer en local
-Évite `file://` pour l'auth. Fais plutôt :
-- VS Code Live Server, ou
-- `python -m http.server` à la racine puis ouvre `http://localhost:8000/public/`
+Puis ouvrir : http://localhost:8000/index.html
 
-## Netlify
-- Publish directory: `public`
-- Build command: none
+Version 100% locale, sans publication.

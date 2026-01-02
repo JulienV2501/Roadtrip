@@ -555,9 +555,6 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
-<script src="auth.js"></script>
-<script>requireAuth();</script>
-
 <div class="app-shell">
   <header>
     <div class="header-left">
@@ -618,10 +615,28 @@ const CAR = {
   fuelPricePerL: 1.9
 };
 
+function getTripNameFromHub(year, slug) {
+  try {
+    const trips = JSON.parse(localStorage.getItem("tripHub.v4")) || [];
+    const t = trips.find(x =>
+      String(x.year) === String(year) &&
+      x.link && x.link.includes(`slug=${slug}`)
+    );
+    return t ? t.name : null;
+  } catch {
+    return null;
+  }
+}
+
+
 (function initTitleAndKeys(){
   const parts = window.location.pathname.split('/').filter(Boolean);
-  let year = "XXXX";
-  let slug = "voyage";
+  // ✅ Supporte aussi les URLs en query (trip.html?year=2026&slug=xxx)
+  const qs = new URLSearchParams(window.location.search);
+  const qYear = qs.get('year');
+  const qSlug = qs.get('slug');
+  let year = qYear;
+  let slug = qSlug;
   if (parts.length >= 2) {
     year = parts[parts.length - 2];
     let filename = parts[parts.length - 1] || "";
@@ -634,11 +649,13 @@ const CAR = {
     .map(w => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
 
-  const title = `${niceName} — ${year}`;
+  const title = `${niceName}`;
   document.title = title;
   const headerTitleEl = document.getElementById('pageTitle');
   if (headerTitleEl) headerTitleEl.textContent = title;
 
+  if (qYear) year = qYear;
+  if (qSlug) slug = qSlug;
   window.__TRIP_YEAR__ = year;
   window.__TRIP_SLUG__ = slug;
 })();
