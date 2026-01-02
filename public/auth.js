@@ -1,48 +1,59 @@
 /* =========================
-   AUTH SIMPLE – LOCAL ONLY
-   ========================= */
+   AUTH FERMÉ – 2 COMPTES
+   =========================
+   - Pas de création de compte
+   - Seulement les emails listés ci-dessous
+   - Mot de passe vérifié par hash SHA-256
+*/
 
-const AUTH_USER_KEY = "auth.user.v1";
 const AUTH_SESSION_KEY = "auth.session.v1";
 
-/* --- utils --- */
-async function hashPassword(pwd) {
-  const enc = new TextEncoder().encode(pwd);
-  const buf = await crypto.subtle.digest("SHA-256", enc);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+/*
+  🔒 REMPLIS ICI
+  - emails autorisés
+  - hash SHA-256 du mot de passe correspondant
 
-function getUser() {
-  try {
-    return JSON.parse(localStorage.getItem(AUTH_USER_KEY));
-  } catch {
-    return null;
-  }
+  Exemple :
+  "julien@mail.com": "e3b0c44298fc1c149afbf4c8996fb924..."
+*/
+const ALLOWED_USERS = {
+  "toi@email.com": "HASH_SHA256_MDP_TOI",
+  "copine@email.com": "HASH_SHA256_MDP_COPINE"
+};
+
+/* ===== utils ===== */
+async function sha256(text) {
+  const data = new TextEncoder().encode(text);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function isLogged() {
   return !!localStorage.getItem(AUTH_SESSION_KEY);
 }
 
-/* --- auth actions --- */
-async function signup(email, password) {
-  if (getUser()) throw new Error("Un compte existe déjà");
-  const hash = await hashPassword(password);
-  localStorage.setItem(AUTH_USER_KEY, JSON.stringify({ email, hash }));
-  await login(email, password);
-}
-
+/* ===== auth ===== */
 async function login(email, password) {
-  const user = getUser();
-  if (!user) throw new Error("Aucun compte");
-  const hash = await hashPassword(password);
-  if (user.email !== email || user.hash !== hash)
-    throw new Error("Identifiants invalides");
+  const e = (email || "").trim().toLowerCase();
+
+  if (!ALLOWED_USERS[e]) {
+    throw new Error("Compte non autorisé");
+  }
+
+  const hash = await sha256(password);
+
+  if (hash !== ALLOWED_USERS[e]) {
+    throw new Error("Mot de passe incorrect");
+  }
+
   localStorage.setItem(
     AUTH_SESSION_KEY,
-    JSON.stringify({ email, at: Date.now() })
+    JSON.stringify({
+      email: e,
+      at: Date.now()
+    })
   );
 }
 
@@ -52,8 +63,9 @@ function logout() {
 
 function requireAuth() {
   if (!isLogged()) {
-    // garde la page demandée pour revenir après login
-    const returnTo = encodeURIComponent(location.pathname + location.search);
+    const returnTo = encodeURIComponent(
+      location.pathname + location.search
+    );
     location.href = `login.html?returnTo=${returnTo}`;
   }
 }
